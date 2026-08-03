@@ -1,47 +1,37 @@
-# Install into your Google Sheet
+# Install into your sheet (2 minutes)
 
-**Your sheet:**  
-https://docs.google.com/spreadsheets/d/1_Zf-ecWOLUg_BiJu9LuE0i7wmJDT9sn8b7HAWKFi98w/edit?usp=sharing
+**Sheet:** https://docs.google.com/spreadsheets/d/1_Zf-ecWOLUg_BiJu9LuE0i7wmJDT9sn8b7HAWKFi98w/edit?usp=sharing
 
-This agent cannot write to the sheet (access is Google-login only / not public).  
-Run the installer **once inside the sheet** to build all tabs + sample data.
+Remote agents still hit Google’s **sign-in wall**, even with Editor link sharing — so you run this once inside the sheet.
 
-## 5-minute install
+## Single-file install (recommended)
 
-1. Open the sheet link above.
-2. **Extensions → Apps Script**
-3. Delete any default code.
-4. Create these files and paste from `google-apps-script/` in this repo:
+1. Open the sheet above  
+2. **Extensions → Apps Script**  
+3. Delete any default code in `Code.gs`  
+4. Paste the entire contents of  
+   [`google-apps-script/SvaraAudit_SINGLE_FILE.gs`](./google-apps-script/SvaraAudit_SINGLE_FILE.gs)  
+5. **Save** → select function **`installEverything`** → **Run** → **Allow**  
+6. Reload the spreadsheet  
+7. **Audit → Open Standalone Audit Form**  
+8. Test UID: **`SV-10001`**
 
-| File in Apps Script | Paste from |
-|---------------------|------------|
-| `Code.gs` | `Code.gs` |
-| `Config.gs` | `Config.gs` |
-| `Classification.gs` | `Classification.gs` |
-| `CallData.gs` | `CallData.gs` |
-| `AuditForm.gs` | `AuditForm.gs` |
-| `Setup.gs` | `Setup.gs` |
-| `WebApp.gs` | `WebApp.gs` |
-| `Installer.gs` | `Installer.gs` |
-| `AuditFormSidebar` (HTML) | `AuditFormSidebar.html` |
-| `StandaloneAuditForm` (HTML) | `StandaloneAuditForm.html` |
+That one paste creates:
 
-5. **Save** the project.
-6. Select function **`installSvaraAuditWorkbook`** → **Run** → **Authorize** (Allow).
-7. Reload the spreadsheet.
-8. Use **Audit → Open Standalone Audit Form**
-9. Test UID: **`SV-10001`**
+- Classification (Rotating / Permanent + Col D questions)  
+- Calls Data (sample UIDs)  
+- Svara Audit Form (permanent + Error/No error)  
+- Parameter Classification  
+- Audit Submissions  
+- Audit menu + standalone form (HTML included inline)
 
-## What the installer creates
+## Optional: service account (for remote automation)
 
-- `Svara Questions Classification` — Col B Rotating/Permanent, Col D parameters  
-- `Calls Data` — sample UIDs + permanent fields  
-- `Svara Audit Form` — fixed permanent block + Error/No error rotating questions  
-- `Parameter Classification` — segregated list  
-- `Audit Submissions` — submission log  
-- **Audit** menu (sidebar, standalone form, fetch/submit macros)
+If you want agents to write to the sheet without you pasting:
 
-## Share setting tip
+1. Create a Google Cloud service account  
+2. Share the sheet with that service account email as **Editor**  
+3. Paste the JSON key into a secure place this environment can read  
+4. Ask the agent again to populate the sheet  
 
-To let tools/scripts read the sheet without login, set sharing to  
-**Anyone with the link → Viewer** (optional). Edit access is only needed for people who audit.
+Until then, the single-file installer above is the fastest path.
