@@ -3,8 +3,8 @@
  * Adjust sheet names / column letters if your workbook layout differs.
  */
 var SVARA_CONFIG = {
-  /** Source sheet: "Svara - New Questions & Classification" */
-  CLASSIFICATION_SHEET: 'Svara - New Questions & Classification',
+  /** Source sheet with rotating/permanent parameter list */
+  CLASSIFICATION_SHEET: 'Svara Questions Classification',
 
   /** Column with questionnaire parameter labels (user specified: column D) */
   PARAM_COLUMN: 4, // D

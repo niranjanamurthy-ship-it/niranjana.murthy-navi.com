@@ -14,9 +14,11 @@ This package adds a **macro-driven audit form** to your spreadsheet with:
 
 [Your sheet](https://docs.google.com/spreadsheets/d/1rqFZjCFARzhIye_zWYBHe7gaQfZ3UI0TpSBH-4B4Un4/edit?gid=1884595185)
 
-Ensure the tab is named exactly:
+Ensure the classification tab is named:
 
-`Svara - New Questions & Classification`
+`Svara Questions Classification`
+
+(Column **B** = Rotating/Permanent, column **D** = parameter labels)
 
 ---
 
