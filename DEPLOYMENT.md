@@ -34,7 +34,9 @@ Ensure the tab is named exactly:
 | `CallData.gs` | `google-apps-script/CallData.gs` |
 | `AuditForm.gs` | `google-apps-script/AuditForm.gs` |
 | `Setup.gs` | `google-apps-script/Setup.gs` |
+| `WebApp.gs` | `google-apps-script/WebApp.gs` |
 | `AuditFormSidebar` (HTML) | `google-apps-script/AuditFormSidebar.html` |
+| `StandaloneAuditForm` (HTML) | `google-apps-script/StandaloneAuditForm.html` |
 
 4. **Save** the project (Ctrl/Cmd + S)
 5. Run **`buildAuditMenu`** once → authorize when prompted
@@ -76,16 +78,29 @@ This creates:
 
 ## 5. Load call data & audit
 
-### Option A — Sidebar form (recommended)
+### Option A — Standalone form (recommended — separate new form)
 
-1. **Audit → Open Audit Sidebar (form)**
+**Inside the sheet**
+
+1. **Audit → Open Standalone Audit Form**
 2. Enter **UID** → **Fetch Call Data**
-3. Permanent fields auto-fill from `Calls Data`
-4. Answer rotating questions (Error / No error)
-5. Use **Hide / Show Rotating Questions** when rotating section is not needed
+3. Permanent fields auto-fill (fixed)
+4. Answer rotating questions (**Error** / **No error**)
+5. Use **Activate / Hide Rotating Questions** when needed
 6. **Submit Audit**
 
-### Option B — In-sheet form
+**As its own web URL (optional)**
+
+1. In Apps Script: **Deploy → New deployment → Web app**
+2. Execute as: **Me** · Who has access: **Anyone with Google account** (or your org)
+3. Copy the web app URL — this is a **separate form page** for auditors
+
+### Option B — Sidebar form
+
+1. **Audit → Open Audit Sidebar**
+2. Same UID → fetch → score → submit flow
+
+### Option C — In-sheet form
 
 1. Open tab **`Svara Audit Form`**
 2. Enter UID in **C4**
@@ -115,7 +130,9 @@ google-apps-script/
 ├── CallData.gs
 ├── AuditForm.gs
 ├── Setup.gs
+├── WebApp.gs
 ├── AuditFormSidebar.html
+├── StandaloneAuditForm.html   ← separate new full-page form
 └── appsscript.json
 ```
 

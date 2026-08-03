@@ -19,7 +19,8 @@ function buildAuditMenu() {
 function buildAuditMenu_() {
   SpreadsheetApp.getUi()
     .createMenu('Audit')
-    .addItem('Open Audit Sidebar (form)', 'openAuditSidebar')
+    .addItem('Open Standalone Audit Form', 'openStandaloneAuditForm')
+    .addItem('Open Audit Sidebar', 'openAuditSidebar')
     .addSeparator()
     .addItem('Fetch Call Data by UID (in-sheet form)', 'fetchCallDataToForm')
     .addItem('Show Rotating Parameters', 'showRotatingParameters')
