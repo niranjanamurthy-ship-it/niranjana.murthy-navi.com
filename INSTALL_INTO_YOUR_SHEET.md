@@ -8,22 +8,17 @@ Remote agents still hit Google’s **sign-in wall**, even with Editor link shari
 
 1. Open the sheet above  
 2. **Extensions → Apps Script**  
-3. Delete any default code in `Code.gs`  
-4. Paste the entire contents of  
-   [`google-apps-script/SvaraAudit_SINGLE_FILE.gs`](./google-apps-script/SvaraAudit_SINGLE_FILE.gs)  
-5. **Save** → select function **`installEverything`** → **Run** → **Allow**  
-6. Reload the spreadsheet  
-7. **Audit → Open Standalone Audit Form**  
-8. Test UID: **`SV-10001`**
+3. Delete **all** code currently in `Code.gs`  
+4. Open the **raw** file (not the GitHub preview page):  
+   https://github.com/niranjanamurthy-ship-it/niranjana.murthy-navi.com/raw/cursor/svara-audit-form-14be/google-apps-script/SvaraAudit_SINGLE_FILE.gs  
+5. Select all → Copy → Paste into `Code.gs`  
+6. **Save** → select function **`installEverything`** → **Run** → **Allow**  
+7. Reload the spreadsheet  
+8. **Audit → Open Standalone Audit Form**  
+9. Test UID: **`SV-10001`**
 
-That one paste creates:
+> If you still see a syntax error, your paste was truncated. Use the raw link above and paste again (Ctrl/Cmd+A in the raw tab first).
 
-- Classification (Rotating / Permanent + Col D questions)  
-- Calls Data (sample UIDs)  
-- Svara Audit Form (permanent + Error/No error)  
-- Parameter Classification  
-- Audit Submissions  
-- Audit menu + standalone form (HTML included inline)
 
 ## Optional: service account (for remote automation)
 
