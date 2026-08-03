@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --ink: #1c1917; --muted: #78716c; --line: #e7e5e4;
+      --accent: #0f766e; --accent-soft: #ccfbf1;
+      --warn: #9a3412; --warn-soft: #ffedd5;
+      --ok: #166534; --ok-soft: #dcfce7;
+      --err: #b91c1c; --err-soft: #fee2e2;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 16px; color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(180deg, #ecfdf5 0%, #fafaf9 40%);
+    }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; }
+    .lede { color: var(--muted); margin: 0 0 14px; font-size: 0.9rem; }
+    .panel {
+      background: #fff; border: 1px solid var(--line);
+      border-radius: 12px; padding: 14px; margin-bottom: 12px;
+    }
+    .title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--accent); margin: 0 0 10px;
+    }
+    .rotating .title { color: var(--warn); }
+    label { display: block; font-size: 0.8rem; font-weight: 600; margin: 0 0 4px; }
+    input, select {
+      width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+      border-radius: 8px; font-size: 0.92rem;
+    }
+    input[readonly] { background: #fafaf9; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .uid { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+    .q {
+      display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px;
+      align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line);
+    }
+    .q:last-child { border-bottom: none; }
+    button {
+      border: none; border-radius: 8px; padding: 9px 14px;
+      font-weight: 600; cursor: pointer;
+    }
+    .primary { background: var(--accent); color: #fff; }
+    .secondary { background: var(--accent-soft); color: var(--accent); }
+    .toggle { background: var(--warn-soft); color: var(--warn); }
+    button:disabled { opacity: 0.55; }
+    .status {
+      display: none; margin-top: 8px; padding: 8px 10px;
+      border-radius: 8px; font-size: 0.85rem;
+    }
+    .status.show { display: block; }
+    .ok { background: var(--ok-soft); color: var(--ok); }
+    .err { background: var(--err-soft); color: var(--err); }
+    .info { background: #f5f5f4; color: var(--muted); }
+    .hidden { display: none !important; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+    .head {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 8px; flex-wrap: wrap; margin-bottom: 8px;
+    }
+    @media (max-width: 640px) {
+      .grid, .q, .uid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Svara QA Audit Form</h1>
+  <p class="lede">Fetch by UID. Permanent fields stay fixed. Toggle rotating Error / No error questions when needed.</p>
+
+  <div class="panel">
+    <div class="title">Call Lookup</div>
+    <div class="uid">
+      <div>
+        <label for="uid">Unique Identity Number (UID)</label>
+        <input id="uid" type="text" placeholder="e.g. SV-10001">
+      </div>
+      <button class="primary" id="fetchBtn" type="button">Fetch Call Data</button>
+    </div>
+    <div id="fetchStatus" class="status"></div>
+  </div>
+
+  <div class="panel">
+    <div class="title">Permanent Parameters (fixed)</div>
+    <div id="permanentFields" class="grid"></div>
+  </div>
+
+  <div class="panel rotating">
+    <div class="head">
+      <div class="title" style="margin:0">Rotating Parameters</div>
+      <button class="toggle" id="toggleBtn" type="button">Hide Rotating Questions</button>
+    </div>
+    <div id="rotatingBlock">
+      <div id="rotatingQuestions"></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="submitBtn" type="button">Submit Audit</button>
+    <button class="secondary" id="clearBtn" type="button">Clear</button>
+  </div>
+  <div id="submitStatus" class="status"></div>
+
+  <script>
+    var rotatingVisible = true;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('fetchBtn').addEventListener('click', fetchCall);
+      document.getElementById('toggleBtn').addEventListener('click', toggleRotating);
+      document.getElementById('submitBtn').addEventListener('click', submitAudit);
+      document.getElementById('clearBtn').addEventListener('click', resetForm);
+      google.script.run
+        .withSuccessHandler(init)
+        .withFailureHandler(function (e) { show('fetchStatus', 'err', e.message); })
+        .getSidebarBootstrapData();
+    });
+
+    function init(data) {
+      renderPerm(data.permanentHeaders || []);
+      renderQs(data.rotatingQuestions || [], data.questionOptions || ['Error', 'No error']);
+    }
+
+    function renderPerm(headers) {
+      var box = document.getElementById('permanentFields');
+      box.innerHTML = '';
+      headers.forEach(function (header) {
+        var editable = header === 'QA Name' || header === 'Audit date' ||
+          header === 'Call Quality Assessment' || header === 'Audit Type';
+        var wrap = document.createElement('div');
+        var label = document.createElement('label');
+        label.textContent = header;
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.setAttribute('data-permanent', header);
+        if (!editable) input.readOnly = true;
+        wrap.appendChild(label);
+        wrap.appendChild(input);
+        box.appendChild(wrap);
+      });
+    }
+
+    function renderQs(questions, options) {
+      var box = document.getElementById('rotatingQuestions');
+      box.innerHTML = '';
+      questions.forEach(function (q) {
+        var row = document.createElement('div');
+        row.className = 'q';
+        var label = document.createElement('div');
+        label.textContent = q;
+        var select = document.createElement('select');
+        select.setAttribute('data-question', q);
+        var blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = '- Select -';
+        select.appendChild(blank);
+        options.forEach(function (opt) {
+          var o = document.createElement('option');
+          o.value = opt;
+          o.textContent = opt;
+          select.appendChild(o);
+        });
+        row.appendChild(label);
+        row.appendChild(select);
+        box.appendChild(row);
+      });
+    }
+
+    function fetchCall() {
+      var uid = document.getElementById('uid').value.trim();
+      if (!uid) {
+        show('fetchStatus', 'err', 'Enter a UID first.');
+        return;
+      }
+      document.getElementById('fetchBtn').disabled = true;
+      show('fetchStatus', 'info', 'Loading...');
+      google.script.run
+        .withSuccessHandler(function (result) {
+          document.getElementById('fetchBtn').disabled = false;
+          if (!result.found) {
+            show('fetchStatus', 'err', 'No call found for UID: ' + uid);
+            return;
+          }
+          Object.keys(result.fields || {}).forEach(function (key) {
+            var input = document.querySelector('[data-permanent="' + cssEsc(key) + '"]');
+            if (!input) return;
+            var val = result.fields[key];
+            input.value = val instanceof Date ? fmt(val) : (val != null ? String(val) : '');
+          });
+          var audit = document.querySelector('[data-permanent="Audit date"]');
+          if (audit && !audit.value) audit.value = fmt(new Date());
+          show('fetchStatus', 'ok', 'Loaded UID ' + uid);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('fetchBtn').disabled = false;
+          show('fetchStatus', 'err', e.message);
+        })
+        .fetchCallForAuditForm(uid);
+    }
+
+    function toggleRotating() {
+      rotatingVisible = !rotatingVisible;
+      var block = document.getElementById('rotatingBlock');
+      var btn = document.getElementById('toggleBtn');
+      if (rotatingVisible) {
+        block.classList.remove('hidden');
+        btn.textContent = 'Hide Rotating Questions';
+        btn.className = 'toggle';
+      } else {
+        block.classList.add('hidden');
+        btn.textContent = 'Activate Rotating Questions';
+        btn.className = 'secondary';
+      }
+    }
+
+    function submitAudit() {
+      var uid = document.getElementById('uid').value.trim();
+      if (!uid) {
+        show('submitStatus', 'err', 'UID is required.');
+        return;
+      }
+      var permanent = [];
+      document.querySelectorAll('[data-permanent]').forEach(function (el) {
+        permanent.push({ label: el.getAttribute('data-permanent'), value: el.value });
+      });
+      var questions = [];
+      if (rotatingVisible) {
+        document.querySelectorAll('[data-question]').forEach(function (el) {
+          questions.push({ label: el.getAttribute('data-question'), value: el.value });
+        });
+      }
+      document.getElementById('submitBtn').disabled = true;
+      google.script.run
+        .withSuccessHandler(function (res) {
+          document.getElementById('submitBtn').disabled = false;
+          show('submitStatus', res.success ? 'ok' : 'err', res.message);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('submitBtn').disabled = false;
+          show('submitStatus', 'err', e.message);
+        })
+        .submitAuditFromSidebar({
+          uid: uid,
+          permanent: permanent,
+          questions: questions,
+          rotatingActive: rotatingVisible
+        });
+    }
+
+    function resetForm() {
+      document.getElementById('uid').value = '';
+      document.querySelectorAll('[data-permanent], [data-question]').forEach(function (el) {
+        el.value = '';
+      });
+      show('fetchStatus', '', '');
+      show('submitStatus', '', '');
+    }
+
+    function show(id, type, msg) {
+      var el = document.getElementById(id);
+      el.className = 'status' + (msg ? ' show ' + type : '');
+      el.textContent = msg || '';
+    }
+
+    function fmt(d) {
+      if (!(d instanceof Date)) d = new Date(d);
+      return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit' });
+    }
+
+    function cssEsc(s) {
+      return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    }
+  </script>
+</body>
+</html>
