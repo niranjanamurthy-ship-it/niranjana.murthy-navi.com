@@ -1,16 +1,8 @@
 /**
- * =============================================================================
- * SVARA QA AUDIT — SINGLE-FILE INSTALLER
+ * SVARA QA AUDIT — paste into Code.gs
+ * Also add HTML file named exactly: AuditForm (from PASTE_AuditForm.html)
+ * Then run: installEverything
  * Sheet: https://docs.google.com/spreadsheets/d/1_Zf-ecWOLUg_BiJu9LuE0i7wmJDT9sn8b7HAWKFi98w
- *
- * INSTALL (2 minutes):
- * 1. Open the sheet → Extensions → Apps Script
- * 2. Delete default Code.gs content and paste THIS file into Code.gs
- * 3. File → New → HTML file → name it exactly: AuditForm
- * 4. Paste PASTE_AuditForm.html into that HTML file → Save both
- * 5. Run installEverything → Allow → reload sheet
- * 6. Audit → Open Standalone Audit Form · UID SV-10001
- * =============================================================================
  */
 
 var SVARA_CONFIG = {

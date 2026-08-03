@@ -1,32 +1,34 @@
-# Install into your sheet (2 minutes)
+# Fix for SyntaxError — use TWO short files (not the giant single file)
+
+Your paste was being **cut off** before the end of the file. Use these two smaller files instead.
 
 **Sheet:** https://docs.google.com/spreadsheets/d/1_Zf-ecWOLUg_BiJu9LuE0i7wmJDT9sn8b7HAWKFi98w/edit?usp=sharing
 
-Remote agents still hit Google’s **sign-in wall**, even with Editor link sharing — so you run this once inside the sheet.
+## Step 1 — Code.gs
 
-## Single-file install (recommended)
+1. Open sheet → **Extensions → Apps Script**
+2. Delete **everything** in `Code.gs`
+3. Open this **raw** link, Select All, Copy:  
+   https://github.com/niranjanamurthy-ship-it/niranjana.murthy-navi.com/raw/cursor/svara-audit-form-14be/google-apps-script/PASTE_Code.gs
+4. Paste into `Code.gs` → **Save**
 
-1. Open the sheet above  
-2. **Extensions → Apps Script**  
-3. Delete **all** code currently in `Code.gs`  
-4. Open the **raw** file (not the GitHub preview page):  
-   https://github.com/niranjanamurthy-ship-it/niranjana.murthy-navi.com/raw/cursor/svara-audit-form-14be/google-apps-script/SvaraAudit_SINGLE_FILE.gs  
-5. Select all → Copy → Paste into `Code.gs`  
-6. **Save** → select function **`installEverything`** → **Run** → **Allow**  
-7. Reload the spreadsheet  
-8. **Audit → Open Standalone Audit Form**  
-9. Test UID: **`SV-10001`**
+## Step 2 — AuditForm.html
 
-> If you still see a syntax error, your paste was truncated. Use the raw link above and paste again (Ctrl/Cmd+A in the raw tab first).
+1. In Apps Script: **+** next to Files → **HTML**  
+2. Name it exactly: `AuditForm` (no `.html` in the name field)
+3. Delete the default HTML inside it
+4. Open this **raw** link, Select All, Copy:  
+   https://github.com/niranjanamurthy-ship-it/niranjana.murthy-navi.com/raw/cursor/svara-audit-form-14be/google-apps-script/PASTE_AuditForm.html
+5. Paste into `AuditForm` → **Save**
 
+## Step 3 — Run
 
-## Optional: service account (for remote automation)
+1. Select function **`installEverything`** → **Run** → **Allow**
+2. Reload the Google Sheet
+3. **Audit → Open Standalone Audit Form**
+4. Test UID: **`SV-10001`**
 
-If you want agents to write to the sheet without you pasting:
+## Check
 
-1. Create a Google Cloud service account  
-2. Share the sheet with that service account email as **Editor**  
-3. Paste the JSON key into a secure place this environment can read  
-4. Ask the agent again to populate the sheet  
-
-Until then, the single-file installer above is the fastest path.
+- `Code.gs` should end with `doGet()` (around line 439)
+- If Save still shows a syntax error, the paste was truncated again — use the raw links and Ctrl/Cmd+A before copying
