@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Google Sans', Roboto, Arial, sans-serif;
+      font-size: 13px;
+      margin: 0;
+      padding: 12px;
+      color: #202124;
+      background: #fafafa;
+    }
+    h2 { margin: 0 0 4px; font-size: 16px; }
+    .subtitle { color: #5f6368; margin-bottom: 14px; font-size: 12px; }
+    label { display: block; font-weight: 500; margin: 10px 0 4px; }
+    input[type="text"], select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .section {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #1a73e8;
+      margin-bottom: 10px;
+    }
+    .section.rotating .section-title { color: #d93025; }
+    .field-row { margin-bottom: 8px; }
+    .field-row.permanent input { background: #f8f9fa; }
+    .question-row {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    .question-row:last-child { border-bottom: none; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    button {
+      border: none;
+      border-radius: 4px;
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button.primary { background: #1a73e8; color: #fff; }
+    button.primary:hover { background: #1765cc; }
+    button.secondary { background: #e8f0fe; color: #1a73e8; }
+    button.toggle-on { background: #fce8e6; color: #d93025; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .status {
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 10px;
+      display: none;
+      font-size: 12px;
+    }
+    .status.ok { display: block; background: #e6f4ea; color: #137333; }
+    .status.err { display: block; background: #fce8e6; color: #c5221f; }
+    .hidden { display: none !important; }
+    .loader { color: #5f6368; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h2>Svara Audit Form</h2>
+  <p class="subtitle">Fetch call by UID · Fixed permanent fields · Toggle rotating questionnaire</p>
+
+  <div class="section">
+    <div class="section-title">Unique Identity Number</div>
+    <input type="text" id="uid" placeholder="e.g. SV-10001" />
+    <div class="btn-row">
+      <button class="primary" id="fetchBtn" onclick="fetchCall()">Fetch Call Data</button>
+    </div>
+    <div id="fetchStatus" class="status"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Permanent Parameters (fixed)</div>
+    <div id="permanentFields"></div>
+  </div>
+
+  <div class="section rotating">
+    <div class="section-title">Rotating Parameters (questionnaire)</div>
+    <div class="btn-row">
+      <button class="toggle-on" id="toggleRotatingBtn" onclick="toggleRotating()">
+        Hide Rotating Questions
+      </button>
+    </div>
+    <div id="rotatingBlock">
+      <div id="rotatingQuestions"></div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="primary" id="submitBtn" onclick="submitAudit()">Submit Audit</button>
+  </div>
+  <div id="submitStatus" class="status"></div>
+
+  <script>
+    var bootstrap = null;
+    var rotatingVisible = true;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      setStatus('fetchStatus', '', '');
+      google.script.run
+        .withSuccessHandler(initForm)
+        .withFailureHandler(function (e) { showError('fetchStatus', e.message); })
+        .getSidebarBootstrapData();
+    });
+
+    function initForm(data) {
+      bootstrap = data;
+      renderPermanentFields(data.permanentHeaders);
+      renderRotatingQuestions(data.rotatingQuestions, data.questionOptions);
+    }
+
+    function renderPermanentFields(headers) {
+      var container = document.getElementById('permanentFields');
+      container.innerHTML = '';
+      headers.forEach(function (header) {
+        var row = document.createElement('div');
+        row.className = 'field-row permanent';
+        row.innerHTML =
+          '<label>' + escapeHtml(header) + '</label>' +
+          '<input type="text" data-permanent="' + escapeAttr(header) + '" readonly />';
+        container.appendChild(row);
+      });
+    }
+
+    function renderRotatingQuestions(questions, options) {
+      var container = document.getElementById('rotatingQuestions');
+      container.innerHTML = '';
+      questions.forEach(function (q) {
+        var row = document.createElement('div');
+        row.className = 'question-row';
+        var opts = options.map(function (o) {
+          return '<option value="' + escapeAttr(o) + '">' + escapeHtml(o) + '</option>';
+        }).join('');
+        row.innerHTML =
+          '<label>' + escapeHtml(q) + '</label>' +
+          '<select data-question="' + escapeAttr(q) + '">' +
+          '<option value="">— Select —</option>' + opts + '</select>';
+        container.appendChild(row);
+      });
+    }
+
+    function fetchCall() {
+      var uid = document.getElementById('uid').value.trim();
+      if (!uid) {
+        showError('fetchStatus', 'Enter a UID first.');
+        return;
+      }
+      document.getElementById('fetchBtn').disabled = true;
+      setStatus('fetchStatus', 'loader', 'Loading call data…');
+      google.script.run
+        .withSuccessHandler(function (result) {
+          document.getElementById('fetchBtn').disabled = false;
+          if (!result.found) {
+            showError('fetchStatus', 'No call found for UID: ' + uid);
+            return;
+          }
+          Object.keys(result.fields).forEach(function (key) {
+            var input = document.querySelector('[data-permanent="' + cssEscape(key) + '"]');
+            if (input) {
+              var val = result.fields[key];
+              input.value = val instanceof Date ? formatDate(val) : (val != null ? val : '');
+            }
+          });
+          // Set audit date to today if empty
+          var auditInput = document.querySelector('[data-permanent="Audit date"]');
+          if (auditInput && !auditInput.value) {
+            auditInput.value = formatDate(new Date());
+          }
+          showOk('fetchStatus', 'Loaded call data for UID ' + uid);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('fetchBtn').disabled = false;
+          showError('fetchStatus', e.message);
+        })
+        .fetchCallForAuditForm(uid);
+    }
+
+    function toggleRotating() {
+      rotatingVisible = !rotatingVisible;
+      var block = document.getElementById('rotatingBlock');
+      var btn = document.getElementById('toggleRotatingBtn');
+      if (rotatingVisible) {
+        block.classList.remove('hidden');
+        btn.textContent = 'Hide Rotating Questions';
+        btn.className = 'toggle-on';
+      } else {
+        block.classList.add('hidden');
+        btn.textContent = 'Show Rotating Questions (activate when required)';
+        btn.className = 'secondary';
+      }
+    }
+
+    function submitAudit() {
+      var uid = document.getElementById('uid').value.trim();
+      if (!uid) {
+        showError('submitStatus', 'UID is required.');
+        return;
+      }
+
+      var permanent = [];
+      document.querySelectorAll('[data-permanent]').forEach(function (el) {
+        permanent.push({ label: el.getAttribute('data-permanent'), value: el.value });
+      });
+
+      var questions = [];
+      if (rotatingVisible) {
+        document.querySelectorAll('[data-question]').forEach(function (el) {
+          questions.push({ label: el.getAttribute('data-question'), value: el.value });
+        });
+      }
+
+      document.getElementById('submitBtn').disabled = true;
+      google.script.run
+        .withSuccessHandler(function (res) {
+          document.getElementById('submitBtn').disabled = false;
+          if (res.success) showOk('submitStatus', res.message);
+          else showError('submitStatus', res.message);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('submitBtn').disabled = false;
+          showError('submitStatus', e.message);
+        })
+        .submitAuditFromSidebar({
+          uid: uid,
+          permanent: permanent,
+          questions: questions,
+          rotatingActive: rotatingVisible
+        });
+    }
+
+    function formatDate(d) {
+      if (!(d instanceof Date)) d = new Date(d);
+      return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit' });
+    }
+
+    function setStatus(id, cls, msg) {
+      var el = document.getElementById(id);
+      el.className = 'status ' + (cls || '');
+      el.textContent = msg || '';
+      el.style.display = msg ? 'block' : 'none';
+    }
+    function showOk(id, msg) { setStatus(id, 'ok', msg); }
+    function showError(id, msg) { setStatus(id, 'err', msg); }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
+    function cssEscape(s) { return String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"'); }
+  </script>
+</body>
+</html>
