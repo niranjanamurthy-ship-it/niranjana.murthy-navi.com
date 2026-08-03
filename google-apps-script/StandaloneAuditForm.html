@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Svara QA Audit Form</title>
+  <style>
+    :root {
+      --ink: #1c1917;
+      --muted: #78716c;
+      --line: #e7e5e4;
+      --surface: #ffffff;
+      --page: #f5f5f4;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --warn: #9a3412;
+      --warn-soft: #ffedd5;
+      --ok: #166534;
+      --ok-soft: #dcfce7;
+      --err: #b91c1c;
+      --err-soft: #fee2e2;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Sans 3", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 80% 50% at 10% -10%, #99f6e4 0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 100% 0%, #fed7aa 0%, transparent 50%),
+        var(--page);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+
+    header {
+      margin-bottom: 22px;
+    }
+    .brand {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 6px;
+      color: var(--ink);
+    }
+    .brand span { color: var(--accent); }
+    .lede {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      max-width: 52ch;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px 18px 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 0 rgba(28, 25, 23, 0.04);
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .panel.rotating .panel-title { color: var(--warn); }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin: 0 0 5px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--ink);
+    }
+    input[readonly] {
+      background: #fafaf9;
+      color: #44403c;
+    }
+    input:focus, select:focus {
+      outline: 2px solid #5eead4;
+      border-color: var(--accent);
+    }
+
+    .uid-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    @media (max-width: 560px) {
+      .uid-row { grid-template-columns: 1fr; }
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 14px;
+    }
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .q-item {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .q-item:last-child { border-bottom: none; }
+    @media (max-width: 640px) {
+      .q-item { grid-template-columns: 1fr; }
+    }
+    .q-label { font-size: 0.92rem; font-weight: 500; }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #0d9488; }
+    .btn-secondary { background: var(--accent-soft); color: var(--accent); }
+    .btn-toggle { background: var(--warn-soft); color: var(--warn); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .status {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+    }
+    .status.show { display: block; }
+    .status.ok { background: var(--ok-soft); color: var(--ok); }
+    .status.err { background: var(--err-soft); color: var(--err); }
+    .status.info { background: #f5f5f4; color: var(--muted); }
+
+    .hidden { display: none !important; }
+
+    footer {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="brand"><span>Svara</span> QA Audit Form</h1>
+      <p class="lede">Separate standalone form — load a call by Unique Identity Number, review fixed permanent fields, then score rotating questions (Error / No error).</p>
+    </header>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title">Call Lookup</h2>
+      </div>
+      <div class="uid-row">
+        <div>
+          <label for="uid">Unique Identity Number (UID)</label>
+          <input id="uid" type="text" placeholder="e.g. SV-10001" autocomplete="off">
+        </div>
+        <button class="btn-primary" id="fetchBtn" type="button" onclick="fetchCall()">Fetch Call Data</button>
+      </div>
+      <div id="fetchStatus" class="status"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 class="panel-title">Permanent Parameters (fixed)</h2>
+      </div>
+      <div id="permanentFields" class="grid-2"></div>
+    </section>
+
+    <section class="panel rotating">
+      <div class="panel-head">
+        <h2 class="panel-title">Rotating Parameters (questionnaire)</h2>
+        <button class="btn-toggle" id="toggleBtn" type="button" onclick="toggleRotating()">
+          Hide Rotating Questions
+        </button>
+      </div>
+      <div id="rotatingBlock">
+        <div id="rotatingQuestions"></div>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn-primary" id="submitBtn" type="button" onclick="submitAudit()">Submit Audit</button>
+      <button class="btn-secondary" type="button" onclick="resetForm()">Clear Form</button>
+    </div>
+    <div id="submitStatus" class="status"></div>
+    <footer>Submissions are written to the Audit Submissions sheet in your workbook.</footer>
+  </div>
+
+  <script>
+    var bootstrap = null;
+    var rotatingVisible = true;
+
+    document.addEventListener('DOMContentLoaded', function () {
+      google.script.run
+        .withSuccessHandler(initForm)
+        .withFailureHandler(function (e) { showStatus('fetchStatus', 'err', e.message); })
+        .getSidebarBootstrapData();
+    });
+
+    function initForm(data) {
+      bootstrap = data;
+      renderPermanent(data.permanentHeaders || []);
+      renderQuestions(data.rotatingQuestions || [], data.questionOptions || ['Error', 'No error']);
+    }
+
+    function renderPermanent(headers) {
+      var box = document.getElementById('permanentFields');
+      box.innerHTML = '';
+      headers.forEach(function (header) {
+        var isEditable = header === 'QA Name' || header === 'Audit date' ||
+          header === 'Call Quality Assessment' || header === 'Audit Type';
+        var div = document.createElement('div');
+        div.innerHTML =
+          '<label>' + esc(header) + '</label>' +
+          '<input type="text" data-permanent="' + attr(header) + '"' +
+          (isEditable ? '' : ' readonly') + ' />';
+        box.appendChild(div);
+      });
+    }
+
+    function renderQuestions(questions, options) {
+      var box = document.getElementById('rotatingQuestions');
+      box.innerHTML = '';
+      questions.forEach(function (q) {
+        var opts = options.map(function (o) {
+          return '<option value="' + attr(o) + '">' + esc(o) + '</option>';
+        }).join('');
+        var row = document.createElement('div');
+        row.className = 'q-item';
+        row.innerHTML =
+          '<div class="q-label">' + esc(q) + '</div>' +
+          '<select data-question="' + attr(q) + '">' +
+          '<option value="">— Select —</option>' + opts + '</select>';
+        box.appendChild(row);
+      });
+    }
+
+    function fetchCall() {
+      var uid = document.getElementById('uid').value.trim();
+      if (!uid) {
+        showStatus('fetchStatus', 'err', 'Enter a UID first.');
+        return;
+      }
+      document.getElementById('fetchBtn').disabled = true;
+      showStatus('fetchStatus', 'info', 'Loading call data…');
+      google.script.run
+        .withSuccessHandler(function (result) {
+          document.getElementById('fetchBtn').disabled = false;
+          if (!result.found) {
+            showStatus('fetchStatus', 'err', 'No call found for UID: ' + uid);
+            return;
+          }
+          Object.keys(result.fields || {}).forEach(function (key) {
+            var input = document.querySelector('[data-permanent="' + cssEsc(key) + '"]');
+            if (!input) return;
+            var val = result.fields[key];
+            input.value = val instanceof Date ? fmtDate(val) : (val != null ? String(val) : '');
+          });
+          var auditInput = document.querySelector('[data-permanent="Audit date"]');
+          if (auditInput && !auditInput.value) auditInput.value = fmtDate(new Date());
+          showStatus('fetchStatus', 'ok', 'Loaded call data for UID ' + uid);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('fetchBtn').disabled = false;
+          showStatus('fetchStatus', 'err', e.message);
+        })
+        .fetchCallForAuditForm(uid);
+    }
+
+    function toggleRotating() {
+      rotatingVisible = !rotatingVisible;
+      var block = document.getElementById('rotatingBlock');
+      var btn = document.getElementById('toggleBtn');
+      if (rotatingVisible) {
+        block.classList.remove('hidden');
+        btn.textContent = 'Hide Rotating Questions';
+        btn.className = 'btn-toggle';
+      } else {
+        block.classList.add('hidden');
+        btn.textContent = 'Activate Rotating Questions';
+        btn.className = 'btn-secondary';
+      }
+    }
+
+    function submitAudit() {
+      var uid = document.getElementById('uid').value.trim();
+      if (!uid) {
+        showStatus('submitStatus', 'err', 'UID is required.');
+        return;
+      }
+
+      var permanent = [];
+      document.querySelectorAll('[data-permanent]').forEach(function (el) {
+        permanent.push({ label: el.getAttribute('data-permanent'), value: el.value });
+      });
+
+      var questions = [];
+      if (rotatingVisible) {
+        document.querySelectorAll('[data-question]').forEach(function (el) {
+          questions.push({ label: el.getAttribute('data-question'), value: el.value });
+        });
+      }
+
+      document.getElementById('submitBtn').disabled = true;
+      google.script.run
+        .withSuccessHandler(function (res) {
+          document.getElementById('submitBtn').disabled = false;
+          if (res.success) showStatus('submitStatus', 'ok', res.message);
+          else showStatus('submitStatus', 'err', res.message);
+        })
+        .withFailureHandler(function (e) {
+          document.getElementById('submitBtn').disabled = false;
+          showStatus('submitStatus', 'err', e.message);
+        })
+        .submitAuditFromSidebar({
+          uid: uid,
+          permanent: permanent,
+          questions: questions,
+          rotatingActive: rotatingVisible
+        });
+    }
+
+    function resetForm() {
+      document.getElementById('uid').value = '';
+      document.querySelectorAll('[data-permanent]').forEach(function (el) { el.value = ''; });
+      document.querySelectorAll('[data-question]').forEach(function (el) { el.value = ''; });
+      showStatus('fetchStatus', '', '');
+      showStatus('submitStatus', '', '');
+    }
+
+    function showStatus(id, type, msg) {
+      var el = document.getElementById(id);
+      el.className = 'status' + (msg ? ' show ' + type : '');
+      el.textContent = msg || '';
+    }
+
+    function fmtDate(d) {
+      if (!(d instanceof Date)) d = new Date(d);
+      return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: '2-digit' });
+    }
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function attr(s) { return esc(s).replace(/"/g, '&quot;'); }
+    function cssEsc(s) { return String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"'); }
+  </script>
+</body>
+</html>
