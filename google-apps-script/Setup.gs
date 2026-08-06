@@ -119,6 +119,8 @@ function fixAllSheetIssues() {
   var cfg = SVARA_CONFIG;
   var fixes = [];
 
+  fixCircularTimestampColumns_(ss, fixes);
+
   var classSheet = ss.getSheetByName(cfg.CLASSIFICATION_SHEET);
   if (!classSheet) {
     SpreadsheetApp.getUi().alert(

@@ -144,6 +144,7 @@ google-apps-script/
 
 | Issue | Fix |
 |-------|-----|
+| Timestamp `#REF!` circular dependency | Run **`fixTimestampCircularDependency`** or **Audit → Setup → Fix All Sheet Issues**; or replace C2 formula per [FIX_SHEET_ISSUES.md](./FIX_SHEET_ISSUES.md) |
 | No Audit menu | Run `buildAuditMenu` in Apps Script, reload sheet |
 | Sheet not found | Match tab names in `Config.gs` |
 | UID not found | Add row to `Calls Data` with matching UID |

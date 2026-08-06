@@ -31,6 +31,7 @@ function buildAuditMenu_() {
       SpreadsheetApp.getUi()
         .createMenu('Setup')
         .addItem('Fix All Sheet Issues', 'fixAllSheetIssues')
+        .addItem('Fix Timestamp Circular Dependency', 'fixTimestampCircularDependency')
         .addItem('Initialize Audit Workbook', 'initializeAuditWorkbook')
         .addItem('Create / Refresh Audit Form Sheet', 'createAuditFormSheet')
         .addItem('Segregate Parameters (Col D → summary)', 'segregateParametersFromClassificationSheet')

@@ -6,7 +6,7 @@ Google Apps Script audit form for the Svara call-quality sheet — permanent vs 
 
 ## Fix sheet issues
 
-See **[FIX_SHEET_ISSUES.md](./FIX_SHEET_ISSUES.md)** — run `fixAllSheetIssues` in Apps Script to repair classification, Calls Data, audit form, and submissions headers.
+See **[FIX_SHEET_ISSUES.md](./FIX_SHEET_ISSUES.md)** — run `fixAllSheetIssues` or `fixTimestampCircularDependency` in Apps Script to repair circular Timestamp formulas, classification, Calls Data, audit form, and submissions headers.
 
 ## Install from scratch
 
