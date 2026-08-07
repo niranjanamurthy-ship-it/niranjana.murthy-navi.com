@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Svara QA Audit Form</title>
+  <style>
+    :root {
+      --ink: #1c1917;
+      --muted: #78716c;
+      --line: #e7e5e4;
+      --bg: #f5f5f4;
+      --accent: #0f766e;
+      --accent-soft: #ccfbf1;
+      --warn: #9a3412;
+      --warn-soft: #ffedd5;
+      --ok: #166534;
+      --ok-soft: #dcfce7;
+      --yellow: #fef08a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, #99f6e4 0%, transparent 40%),
+        radial-gradient(circle at top right, #fed7aa 0%, transparent 35%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+    h1 {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+    h1 span { color: var(--accent); }
+    .lede { color: var(--muted); margin: 0 0 22px; font-size: 1.05rem; max-width: 50ch; }
+    .panel {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    }
+    .title {
+      margin: 0 0 12px;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-family: Arial, sans-serif;
+      color: var(--accent);
+    }
+    .rotating .title { color: var(--warn); }
+    label {
+      display: block;
+      font-family: Arial, sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin: 0 0 5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: Arial, sans-serif;
+      background: #fff;
+    }
+    input.fillable, select { background: var(--yellow); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .uid-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
+    .q {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-family: Arial, sans-serif;
+    }
+    .q:last-child { border-bottom: 0; }
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-weight: 700;
+      font-family: Arial, sans-serif;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .primary { background: var(--accent); color: #fff; }
+    .secondary { background: var(--accent-soft); color: var(--accent); }
+    .warnbtn { background: var(--warn-soft); color: var(--warn); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .status {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 0.9rem;
+    }
+    .status.show { display: block; }
+    .ok { background: var(--ok-soft); color: var(--ok); }
+    .err { background: #fee2e2; color: #b91c1c; }
+    .info { background: #f5f5f4; color: var(--muted); }
+    .hidden { display: none !important; }
+    .head { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+    footer { margin-top: 14px; color: var(--muted); font-size: 0.9rem; font-family: Arial, sans-serif; }
+    @media (max-width: 700px) {
+      .grid, .q, .uid-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1><span>Svara</span> QA Audit Form</h1>
+    <p class="lede">Open this file in Chrome. Fill the form. Download your answers as CSV. No Google menu needed.</p>
+
+    <div class="panel">
+      <div class="title">Call Lookup</div>
+      <div class="uid-row">
+        <div>
+          <label for="uid">Unique Identity Number (UID)</label>
+          <input id="uid" class="fillable" type="text" value="SV-10001" />
+        </div>
+        <button class="primary" type="button" id="loadBtn">Load Sample Call</button>
+        <button class="secondary" type="button" id="clearBtn">Clear</button>
+      </div>
+      <div id="loadStatus" class="status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="title">Permanent Parameters (fixed)</div>
+      <div class="grid" id="permanent"></div>
+    </div>
+
+    <div class="panel rotating">
+      <div class="head">
+        <div class="title" style="margin:0">Rotating Parameters</div>
+        <button class="warnbtn" type="button" id="toggleBtn">Hide Rotating Questions</button>
+      </div>
+      <div id="rotatingBlock">
+        <div id="questions"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="primary" type="button" id="downloadBtn">Download Audit CSV</button>
+      <button class="secondary" type="button" id="copyBtn">Copy Answers</button>
+    </div>
+    <div id="saveStatus" class="status"></div>
+    <footer>Sample UIDs: SV-10001, SV-10002, SV-10003. Yellow boxes are for typing/selecting.</footer>
+  </div>
+
+  <script>
+    var permanentHeaders = [
+      'LAN', 'Call Date', 'Audit date', 'QA Name', 'Call Quality Assessment',
+      'Call Duration', 'Penalty Timeline', 'Experiment Tag', 'Recording Link',
+      'DPD', 'CX Preferred Language', 'Bot Spoken Language', 'Bot Disposition',
+      'Right Disposition according to Conversation', 'Audit Type', 'Bot Activity'
+    ];
+
+    var editable = {
+      'QA Name': true,
+      'Audit date': true,
+      'Call Quality Assessment': true,
+      'Audit Type': true
+    };
+
+    var questions = [
+      'Greeting & Introduction',
+      'Purpose of Call Stated',
+      'Identity Verification',
+      'Active Listening',
+      'Empathy & Tone',
+      'Accurate Information Provided',
+      'Objection Handling',
+      'Call Closing & Summary',
+      'Compliance Disclosure',
+      'Bot Handoff Quality',
+      'Language Switching Accuracy',
+      'Disposition Mapping Accuracy',
+      'Hold / Silence Handling',
+      'Repeat Request Handling',
+      'Promise / Next Step Captured'
+    ];
+
+    var calls = {
+      'SV-10001': {
+        'LAN': 'LAN-1001', 'Call Date': '1 Aug 2026', 'Audit date': '', 'QA Name': '',
+        'Call Quality Assessment': '', 'Call Duration': '03:42', 'Penalty Timeline': 'T+0',
+        'Experiment Tag': 'exp-a', 'Recording Link': 'https://example.com/rec/SV-10001',
+        'DPD': '15', 'CX Preferred Language': 'Hindi', 'Bot Spoken Language': 'Hindi',
+        'Bot Disposition': 'PTP', 'Right Disposition according to Conversation': 'PTP',
+        'Audit Type': 'Regular', 'Bot Activity': 'Active'
+      },
+      'SV-10002': {
+        'LAN': 'LAN-1002', 'Call Date': '1 Aug 2026', 'Audit date': '', 'QA Name': '',
+        'Call Quality Assessment': '', 'Call Duration': '05:11', 'Penalty Timeline': 'T+1',
+        'Experiment Tag': 'exp-b', 'Recording Link': 'https://example.com/rec/SV-10002',
+        'DPD': '30', 'CX Preferred Language': 'English', 'Bot Spoken Language': 'English',
+        'Bot Disposition': 'RPC', 'Right Disposition according to Conversation': 'RPC',
+        'Audit Type': 'Regular', 'Bot Activity': 'Active'
+      },
+      'SV-10003': {
+        'LAN': 'LAN-1003', 'Call Date': '2 Aug 2026', 'Audit date': '', 'QA Name': '',
+        'Call Quality Assessment': '', 'Call Duration': '02:05', 'Penalty Timeline': 'T+0',
+        'Experiment Tag': 'exp-a', 'Recording Link': 'https://example.com/rec/SV-10003',
+        'DPD': '7', 'CX Preferred Language': 'Kannada', 'Bot Spoken Language': 'Kannada',
+        'Bot Disposition': 'Follow-up', 'Right Disposition according to Conversation': 'Follow-up',
+        'Audit Type': 'Calibration', 'Bot Activity': 'Silent'
+      }
+    };
+
+    var rotatingVisible = true;
+
+    function build() {
+      var p = document.getElementById('permanent');
+      permanentHeaders.forEach(function (h) {
+        var div = document.createElement('div');
+        var lab = document.createElement('label');
+        lab.textContent = h;
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.dataset.permanent = h;
+        if (editable[h]) input.className = 'fillable';
+        else input.readOnly = true;
+        div.appendChild(lab);
+        div.appendChild(input);
+        p.appendChild(div);
+      });
+
+      var qbox = document.getElementById('questions');
+      questions.forEach(function (q) {
+        var row = document.createElement('div');
+        row.className = 'q';
+        var left = document.createElement('div');
+        left.textContent = q;
+        var sel = document.createElement('select');
+        sel.className = 'fillable';
+        sel.dataset.question = q;
+        ['', 'Error', 'No error'].forEach(function (opt) {
+          var o = document.createElement('option');
+          o.value = opt;
+          o.textContent = opt || '- Select -';
+          sel.appendChild(o);
+        });
+        row.appendChild(left);
+        row.appendChild(sel);
+        qbox.appendChild(row);
+      });
+    }
+
+    function show(id, type, msg) {
+      var el = document.getElementById(id);
+      el.className = 'status' + (msg ? ' show ' + type : '');
+      el.textContent = msg || '';
+    }
+
+    function today() {
+      return new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function loadCall() {
+      var uid = document.getElementById('uid').value.trim().toUpperCase();
+      document.getElementById('uid').value = uid;
+      var data = calls[uid];
+      if (!data) {
+        show('loadStatus', 'err', 'UID not found. Try SV-10001, SV-10002, or SV-10003.');
+        return;
+      }
+      permanentHeaders.forEach(function (h) {
+        var input = document.querySelector('[data-permanent="' + h + '"]');
+        if (!input) return;
+        input.value = data[h] || '';
+      });
+      var audit = document.querySelector('[data-permanent="Audit date"]');
+      if (audit && !audit.value) audit.value = today();
+      show('loadStatus', 'ok', 'Loaded call data for ' + uid);
+    }
+
+    function toggleRotating() {
+      rotatingVisible = !rotatingVisible;
+      document.getElementById('rotatingBlock').classList.toggle('hidden', !rotatingVisible);
+      var btn = document.getElementById('toggleBtn');
+      btn.textContent = rotatingVisible ? 'Hide Rotating Questions' : 'Show Rotating Questions';
+    }
+
+    function collect() {
+      var row = {
+        'Submission Timestamp': new Date().toISOString(),
+        'UID': document.getElementById('uid').value.trim(),
+        'Rotating Section Active': rotatingVisible ? 'Yes' : 'No'
+      };
+      document.querySelectorAll('[data-permanent]').forEach(function (el) {
+        row[el.dataset.permanent] = el.value;
+      });
+      if (rotatingVisible) {
+        document.querySelectorAll('[data-question]').forEach(function (el) {
+          row['Q: ' + el.dataset.question] = el.value;
+        });
+      }
+      return row;
+    }
+
+    function toCsv(row) {
+      var keys = Object.keys(row);
+      function esc(v) {
+        v = String(v == null ? '' : v);
+        if (/[",\n]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+        return v;
+      }
+      return keys.map(esc).join(',') + '\n' + keys.map(function (k) { return esc(row[k]); }).join(',');
+    }
+
+    function downloadCsv() {
+      var row = collect();
+      if (!row.UID) {
+        show('saveStatus', 'err', 'Enter a UID first.');
+        return;
+      }
+      var blob = new Blob([toCsv(row)], { type: 'text/csv;charset=utf-8;' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'Svara_Audit_' + row.UID + '.csv';
+      a.click();
+      show('saveStatus', 'ok', 'CSV downloaded. You can upload this CSV into Google Sheets.');
+    }
+
+    function copyAnswers() {
+      var row = collect();
+      var text = Object.keys(row).map(function (k) { return k + ': ' + row[k]; }).join('\n');
+      navigator.clipboard.writeText(text).then(function () {
+        show('saveStatus', 'ok', 'Answers copied. Paste into Google Sheets if you want.');
+      }).catch(function () {
+        show('saveStatus', 'info', text);
+      });
+    }
+
+    function clearForm() {
+      document.querySelectorAll('[data-permanent], [data-question]').forEach(function (el) { el.value = ''; });
+      document.getElementById('uid').value = '';
+      show('loadStatus', '', '');
+      show('saveStatus', '', '');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      build();
+      document.getElementById('loadBtn').onclick = loadCall;
+      document.getElementById('toggleBtn').onclick = toggleRotating;
+      document.getElementById('downloadBtn').onclick = downloadCsv;
+      document.getElementById('copyBtn').onclick = copyAnswers;
+      document.getElementById('clearBtn').onclick = clearForm;
+      loadCall();
+    });
+  </script>
+</body>
+</html>
