@@ -41,6 +41,12 @@ This cloud agent cannot sign into Google on your behalf, so repairs are applied 
 
 Or run **`fixTimestampCircularDependency`** alone if only the Timestamp column shows `#REF!`.
 
+### Fastest fix (single function only)
+
+1. **Extensions → Apps Script**
+2. Paste [`FIX_TIMESTAMP_ONLY.gs`](./google-apps-script/FIX_TIMESTAMP_ONLY.gs) into `Code.gs` (replace all)
+3. Run **`fixTimestampCircularDependency`** → **Allow** → reload sheet
+
 ## Manual fix (edit formula directly)
 
 If **Timestamp** (column C) shows `#REF!` / *Circular dependency detected*:
