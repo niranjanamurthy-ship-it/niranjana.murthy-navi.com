@@ -1,0 +1,16 @@
+{
+  "name": "Svara QA Audit Form",
+  "terminals": [
+    {
+      "name": "preview",
+      "command": "python3 -m http.server 3000 --bind 0.0.0.0",
+      "description": "Static preview server for the standalone audit form and Apps Script HTML at http://localhost:3000"
+    }
+  ],
+  "ports": [
+    {
+      "name": "preview",
+      "port": 3000
+    }
+  ]
+}
